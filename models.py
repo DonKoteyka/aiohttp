@@ -1,9 +1,9 @@
-import atexit
 import datetime
 import os
-
-from sqlalchemy import DateTime, String, create_engine, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
+from sqlalchemy import DateTime, String, func
+from sqlalchemy.ext.asyncio import (AsyncAttrs, async_sessionmaker,
+                                    create_async_engine)
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from dotenv import load_dotenv
 
@@ -15,18 +15,18 @@ DB_PORT = os.getenv('DB_PORT')
 DB_USER = os.getenv('DB_USER')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
 
-PG_DSN = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+PG_DSN = f'postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
 
-engine = create_engine(PG_DSN)
-Session = sessionmaker(bind=engine)
+engine = create_async_engine(PG_DSN)
+Session = async_sessionmaker(engine, expire_on_commit=False)
 
 
-class Base(DeclarativeBase):
+class Base(AsyncAttrs, DeclarativeBase):
     pass
 
 
 class Article(Base):
-    __tablename__ = 'app_articles'
+    __tablename__ = 'app_articles_aiohttp'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     article: Mapped[str] = mapped_column(String(150), unique=True, index=True, nullable=False)
@@ -40,12 +40,11 @@ class Article(Base):
             'id': self.id,
             'article': self.article,
             'description': self.description,
-            'date_pub': self.date_pub,
+            'date_pub': int(self.date_pub.timestamp()),
             'owner': self.owner,
         }
 
 
-# Base.metadata.drop_all(bind=engine)
-Base.metadata.create_all(bind=engine)
-
-atexit.register(engine.dispose)
+async def init_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
