@@ -1,0 +1,43 @@
+# примеры API-запросов
+
+@baseUrl = http://0.0.0.0:8080/api
+
+# создание статьи
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+    "article": "art from client @2",
+    "description": "some discription from client@2",
+    "owner": "Rest LC@2"
+}
+
+###
+# прочтение статьи
+GET {{baseUrl}}/1
+Content-Type: application/json
+###
+
+# прочтение статей
+GET {{baseUrl}}
+Content-Type: application/json
+###
+# редактирование статьи
+PATCH {{baseUrl}}/1
+Content-Type: application/json
+
+{
+    "article": "valideted art patched",
+    "description": "some discription patched",
+    "owner": "Rest LC"
+}
+###
+# удаление статьи
+DELETE {{baseUrl}}/1
+Content-Type: application/json
+
+
+
+
+
+
