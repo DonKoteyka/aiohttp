@@ -1,12 +1,38 @@
 
 version: "3.9"
+
+# volumes:
+#   app:
+
 services:
 
   db:
     image: postgres:14.3-alpine3.15
     ports:
-      - "5431:5432"
+      - "5432:5432"
+    hostname: localhost
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: netology
       POSTGRES_DB: netology
+    # restart: unless-stopped
+    # healthcheck:
+    #   test: [ "CMD-SHELL", "pg_isready -U postgres -d netology" ]
+    #   interval: 1m30s
+    #   timeout: 30s
+    #   retries: 3
+    #   start_period: 30s
+
+  app:
+    build: ./
+    ports:
+      - "8080:8080"
+    volumes:
+      - /home/donkoteyka/Документы/Python/aiohttp/:/app
+    env_file:
+      - .env
+    depends_on: db
+    restart: unless-stopped
+
+
+    
